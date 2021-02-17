@@ -7,6 +7,9 @@
 QT       += network xml sql
 QT       -= gui
 
+DESTDIR = lib
+win32:DLLDESTDIR = bin
+
 TEMPLATE = lib
 
 DEFINES += CPPWEBFRAMEWORK_LIBRARY
@@ -89,41 +92,17 @@ HEADERS += \
     cwf/modelbasicoperation.h \
     cwf/sqlquerymanager.h
 
-DISTFILES += \
-    server/config/ssl/my.key \
-    server/config/ssl/my.cert \
-    server/config/cppwebserverpages/403.view \
-    server/config/cppwebserverpages/404.view \
-    server/config/cppwebserverpages/index.view \
-    server/config/cppwebserverpages/resources/images/logo.jpg \
-    server/config/cppwebserverpages/resources/images/favicon.ico \
-    server/config/cppwebserverpages/resources/css/cppweb.css \
-    server/config/CPPWeb.ini \
-    server/config/log/CPPWebServer.log
-
-unix {
-    headers.path   = /usr/lib/cwf
-    headers.files += $$HEADERS
-    target.path    = /usr/lib
-    config.path    = /usr/lib/server
-    config.files   = server/*
-}
-
-macx {
-    headers.path   = /usr/local/lib/cwf
-    headers.files += $$HEADERS
-    target.path    = /usr/local/lib
-    config.path    = /usr/local/lib/server
-    config.files   = server/*
-}
-
-win32 {
-    headers.path   = C:/cwf
-    headers.files += $$HEADERS
-    target.path    = C:/cwf
-    config.path    = C:/cwf/server
-    config.files   = server/*
-}
+#DISTFILES += \
+#    server/config/ssl/my.key \
+#    server/config/ssl/my.cert \
+#    server/config/cppwebserverpages/403.view \
+#    server/config/cppwebserverpages/404.view \
+#    server/config/cppwebserverpages/index.view \
+#    server/config/cppwebserverpages/resources/images/logo.jpg \
+#    server/config/cppwebserverpages/resources/images/favicon.ico \
+#    server/config/cppwebserverpages/resources/css/cppweb.css \
+#    server/config/CPPWeb.ini \
+#    server/config/log/CPPWebServer.log
 
 CONFIG += debug_and_release
 CONFIG += build_all
@@ -142,6 +121,23 @@ INSTALLS += headers
 INSTALLS += config
 
 QMAKE_CXXFLAGS += -std=c++11
+
+win32:headers.commands += mkdir $$OUT_PWD/include/cwf &
+else:headers.commands += mkdir $$OUT_PWD/include/cwf;
+for(header,HEADERS) {
+    win32:headers.commands += $(COPY_DIR) $$PWD/$$header $$OUT_PWD/include/cwf &
+    else:headers.commands += $(COPY_DIR) $$PWD/$$header $$OUT_PWD/include/cwf;
+}
+win32:headers.commands += $(COPY_DIR) $$PWD/include/* $$OUT_PWD/include/cwf &
+else:headers.commands += $(COPY_DIR) $$PWD/include/* $$OUT_PWD/include/cwf;
+headers.commands += $(COPY_DIR) $$PWD/CPPWebFramework.pri $$OUT_PWD
+
+win32:headers.commands = $$replace(headers.commands, /, \\)
+
+first.depends = $(first) headers
+export(first.depends)
+export(headers.commands)
+QMAKE_EXTRA_TARGETS += first headers
 
 #Strongly recommended
 #LIBS += -ljemalloc
